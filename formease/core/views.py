@@ -63,11 +63,6 @@ def pdf_summary(request):
                     
             doc.close()
             
-            # Clean up the temporary file
-            try:
-                os.remove(file_path)
-            except OSError:
-                pass
 
             if not text.strip():
                 messages.error(request, 'Could not extract any text from the PDF. Please make sure the file contains readable text.')
@@ -90,4 +85,10 @@ def pdf_summary(request):
             messages.error(request, f'An error occurred while processing your PDF: {str(e)}')
             return render(request, 'core/pdf_summary.html')
 
+        # Clean up the temporary file
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass
+        
     return render(request, 'core/pdf_summary.html', {'summary': summary})
