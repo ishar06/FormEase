@@ -191,3 +191,38 @@
 
 ---
 
+To get the changes made by others in a GitHub repository to reflect in your local cloned folder, you need to **pull the latest changes** from the remote repository. Here's the simple step-by-step guide:
+
+### ✅ Steps to Sync Your Local Repo with Remote Changes
+
+1. **Open your terminal or command prompt**.
+2. **Navigate to your cloned repository**:
+   ```bash
+   cd path/to/your/cloned/repo
+   ```
+3. **Check the current remote (usually it’s named `origin`)**:
+   ```bash
+   git remote -v
+   ```
+   This should show the URL of the GitHub repo you cloned.
+
+4. **Pull the latest changes from the default branch (usually `main` or `master`)**:
+   ```bash
+   git pull origin main
+   ```
+   Replace `main` with `master` or whatever the default branch is if it's different.
+
+### ✅ If You’re Working on a Branch:
+If you're on a specific branch (e.g. `dev`), pull changes for that branch:
+```bash
+git pull origin dev
+```
+
+### 💡 Optional: Fetch then merge (if you want more control)
+Instead of pulling directly, you can do:
+```bash
+git fetch origin
+git merge origin/main
+```
+
+
