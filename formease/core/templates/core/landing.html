@@ -1,0 +1,60 @@
+{% extends "core/base.html" %}
+
+{% block title %}FormEase - Intelligent Document Processing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center min-vh-75">
+        <!-- Hero Section -->
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <h1 class="display-3 fw-bold mb-4">Transform Your Documents with AI</h1>
+            <p class="lead mb-4">FormEase helps you extract, summarize, and process documents intelligently using advanced AI and OCR technology.</p>
+            <div class="d-flex gap-3">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Sign In</a>
+            </div>
+        </div>
+        <!-- Features -->
+        <div class="col-lg-6">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-alt feature-icon"></i>
+                            <h5>PDF Summary</h5>
+                            <p>Get AI-powered summaries of your documents instantly.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-magic feature-icon"></i>
+                            <h5>Smart OCR</h5>
+                            <p>Convert scanned documents to searchable text.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt feature-icon"></i>
+                            <h5>Secure</h5>
+                            <p>Your documents are processed securely and privately.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-bolt feature-icon"></i>
+                            <h5>Fast Processing</h5>
+                            <p>Get results in seconds with our optimized pipeline.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
