@@ -216,7 +216,7 @@ def resume_builder(request):
                 skills_count += 1
             
             # Generate resume content using Ollama
-            prompt = """Create a professional resume using HTML markup with the following information. Follow the HTML structure exactly:
+            prompt = """Create a professional resume using HTML markup with the following information. Do not write any prefix, do only what you are told, no prefix or suffix. i don't want anything like 'Here is the professional resume in HTML markup:' in the beginning. Follow the HTML structure exactly:
 
 <h1>{full_name}</h1>
 <div class="contact-info">
