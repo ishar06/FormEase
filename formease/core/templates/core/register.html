@@ -3,44 +3,40 @@
 {% block title %}Register - FormEase{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4 p-sm-5">
-                    <div class="text-center mb-4">
-                        <h1 class="h3">Create Account</h1>
-                        <p class="text-muted">Get started with FormEase</p>
-                    </div>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" name="username" class="form-control" id="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" id="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password1" class="form-label">Password</label>
-                            <input type="password" name="password1" class="form-control" id="password1" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password2" class="form-label">Confirm Password</label>
-                            <input type="password" name="password2" class="form-control" id="password2" required>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
-                        </div>
-                    </form>
-                    
-                    <div class="mt-4 text-center">
-                        <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
-                    </div>
-                </div>
+<div class="container" style="min-height: 80vh; display: flex; justify-content: center; align-items: center;">
+    <div class="card" style="background-color: rgba(20, 20, 20, 0.9); padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); transition: transform 0.3s, box-shadow 0.3s;">
+        <div class="text-center mb-4">
+            <h1 class="h3" style="color: #ffd700;">Create an Account</h1>
+            <p class="text-muted">Join FormEase and simplify your tasks</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label" style="color: #fff;">Username</label>
+                <input type="text" name="username" class="form-control" id="username" required style="background-color: #333; color: #fff; border: 1px solid #555;">
             </div>
+            <div class="mb-3">
+                <label for="email" class="form-label" style="color: #fff;">Email</label>
+                <input type="email" name="email" class="form-control" id="email" required style="background-color: #333; color: #fff; border: 1px solid #555;">
+            </div>
+            <div class="mb-3">
+                <label for="password1" class="form-label" style="color: #fff;">Password</label>
+                <input type="password" name="password1" class="form-control" id="password1" required style="background-color: #333; color: #fff; border: 1px solid #555;">
+            </div>
+            <div class="mb-3">
+                <label for="password2" class="form-label" style="color: #fff;">Confirm Password</label>
+                <input type="password" name="password2" class="form-control" id="password2" required style="background-color: #333; color: #fff; border: 1px solid #555;">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg" style="background-color: #ffd700; color: #000; border: none; transition: background-color 0.3s, transform 0.3s;">
+                    Register
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-4 text-center">
+            <p class="mb-0" style="color: #fff;">Already have an account? <a href="{% url 'login' %}" style="color: #ffd700; text-decoration: none; transition: color 0.3s;">Login</a></p>
         </div>
     </div>
 </div>
