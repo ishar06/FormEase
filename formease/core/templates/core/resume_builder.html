@@ -85,6 +85,23 @@
                 <div class="card-body p-4">
                     <h2 class="text-center mb-4">Build Your Resume</h2>
                     
+                    {% if not form_type %}
+                    <div class="text-center mb-4">
+                        <p class="lead mb-4">Choose how you want to create your resume</p>
+                        <form method="get">
+                            <input type="hidden" name="type" value="auto">
+                            <button type="submit" class="btn btn-primary btn-lg mb-3 w-100">
+                                <i class="fas fa-magic me-2"></i>Use My Profile Details
+                            </button>
+                        </form>
+                        <form method="get">
+                            <input type="hidden" name="type" value="custom">
+                            <button type="submit" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-edit me-2"></i>Create Custom Resume
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
                     <!-- Progress Bar -->
                     <div class="progress mb-4">
                         <div class="progress-bar" role="progressbar" style="width: 25%"></div>
@@ -92,6 +109,7 @@
                     
                     <form id="resumeForm" method="post">
                         {% csrf_token %}
+                        <input type="hidden" name="form_type" value="{{ form_type }}">
                         
                         <!-- Personal Information Section -->
                         <div class="form-section active" data-step="1">
@@ -99,23 +117,23 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Full Name</label>
-                                    <input type="text" name="full_name" class="form-control" required>
+                                    <input type="text" name="full_name" class="form-control" required value="{{ auto_fill.full_name }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control" required>
+                                    <input type="email" name="email" class="form-control" required value="{{ auto_fill.email }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Phone</label>
-                                    <input type="tel" name="phone" class="form-control" required>
+                                    <input type="tel" name="phone" class="form-control" required value="{{ auto_fill.phone }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Location</label>
-                                    <input type="text" name="location" class="form-control" required>
+                                    <input type="text" name="location" class="form-control" required value="{{ auto_fill.location }}">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">Professional Summary</label>
-                                    <textarea name="summary" class="form-control" rows="4" required></textarea>
+                                    <textarea name="summary" class="form-control" rows="4" required>{{ auto_fill.summary }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -124,26 +142,49 @@
                         <div class="form-section" data-step="2">
                             <h3 class="h4 mb-4">Education</h3>
                             <div id="educationContainer">
-                                <div class="education-entry border rounded p-3 mb-3">
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Degree/Certificate</label>
-                                            <input type="text" name="education[0][degree]" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Institution</label>
-                                            <input type="text" name="education[0][institution]" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Start Date</label>
-                                            <input type="month" name="education[0][start_date]" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">End Date</label>
-                                            <input type="month" name="education[0][end_date]" class="form-control">
+                                {% if auto_fill.education %}
+                                    <div class="education-entry border rounded p-3 mb-3">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Degree/Certificate</label>
+                                                <input type="text" name="education[0][degree]" class="form-control" required value="{{ auto_fill.education.degree }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Institution</label>
+                                                <input type="text" name="education[0][institution]" class="form-control" required value="{{ auto_fill.education.institution }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Start Date</label>
+                                                <input type="month" name="education[0][start_date]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">End Date</label>
+                                                <input type="month" name="education[0][end_date]" class="form-control" value="{{ auto_fill.education.graduation_year }}">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% else %}
+                                    <div class="education-entry border rounded p-3 mb-3">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Degree/Certificate</label>
+                                                <input type="text" name="education[0][degree]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Institution</label>
+                                                <input type="text" name="education[0][institution]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Start Date</label>
+                                                <input type="month" name="education[0][start_date]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">End Date</label>
+                                                <input type="month" name="education[0][end_date]" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-sm" id="addEducation">
                                 <i class="fas fa-plus"></i> Add Education
@@ -213,6 +254,7 @@
                             <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Generate Resume</button>
                         </div>
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

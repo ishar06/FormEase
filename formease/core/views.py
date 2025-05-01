@@ -10,11 +10,12 @@ import os
 import pytesseract
 import numpy as np
 import json
-from .models import Resume, PDFSummary
+from .models import Resume, PDFSummary, UserProfile
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.utils.html import escape
+from .forms import EditProfileForm, ExtendedUserCreationForm, UserProfileForm
 
 # Configure Tesseract path
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -45,9 +46,9 @@ def login_view(request):
 def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
-        
+
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = ExtendedUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
@@ -56,8 +57,10 @@ def register_view(request):
         else:
             for error in form.errors.values():
                 messages.error(request, error)
-    
-    return render(request, 'core/register.html')
+    else:
+        form = ExtendedUserCreationForm()
+
+    return render(request, 'core/register.html', {'form': form})
 
 def logout_view(request):
     logout(request)
@@ -67,6 +70,36 @@ def logout_view(request):
 @login_required
 def home(request):
     return render(request, 'core/home.html')
+
+@login_required
+def profile(request):
+    # Get or create UserProfile for the current user
+    userprofile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    resumes = Resume.objects.filter(user=request.user).order_by('-created_at')
+    pdf_summaries = PDFSummary.objects.filter(user=request.user).order_by('-created_at')
+
+    if request.method == 'POST':
+        user_form = EditProfileForm(request.POST, instance=request.user)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        user_form = EditProfileForm(instance=request.user)
+        profile_form = UserProfileForm(instance=userprofile)
+
+    return render(request, 'core/profile.html', {
+        'resumes': resumes,
+        'pdf_summaries': pdf_summaries,
+        'user_form': user_form,
+        'profile_form': profile_form
+    })
 
 @login_required
 def pdf_summary(request):
@@ -129,9 +162,27 @@ def pdf_summary(request):
                 messages.error(request, 'Could not extract any text from the PDF. Please make sure the file contains readable text.')
                 return render(request, 'core/pdf_summary.html')
 
-            # Call Ollama for summarization
+            # Call Ollama for summarization with title extraction
             try:
-                prompt = (
+                title_prompt = (
+                    "Do not add any prefixes or suffixes like '(Note: I've kept it concise while still capturing the main topic and purpose of the document)' or 'Here is a well-formatted summary of the text using HTML markup:' Based on the following text, generate a concise but descriptive title "
+                    "that summarizes the main topic or purpose of the document (maximum 5-7 words):\n\n"
+                    f"{text[:1000]}"  # Use first 1000 characters for title generation
+                )
+                
+                title_response = ollama.chat(
+                    model='llama3',
+                    messages=[{"role": "user", "content": title_prompt}]
+                )
+                generated_title = title_response['message']['content'].strip()
+                
+                # Clean up the title
+                if generated_title.startswith('"') and generated_title.endswith('"'):
+                    generated_title = generated_title[1:-1]
+                generated_title = generated_title.strip()
+
+                # Now generate the summary
+                summary_prompt = (
                     "Create a well-formatted summary of the following text using HTML markup. Follow these rules:\n"
                     "1. Use h2 tags for main sections\n"
                     "2. Use h3 tags for subsections\n"
@@ -143,15 +194,15 @@ def pdf_summary(request):
                     "Text to summarize:\n\n"
                     f"{text}"
                 )
-                response = ollama.chat(
+                
+                summary_response = ollama.chat(
                     model='llama3',
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": summary_prompt}]
                 )
-                summary = response['message']['content'].strip()
+                summary = summary_response['message']['content'].strip()
                 
                 # Clean up the formatting if needed
                 if not summary.startswith('<'):
-                    # Convert plain text to basic HTML if AI didn't return HTML
                     formatted_lines = []
                     for line in summary.split('\n'):
                         line = line.strip()
@@ -166,10 +217,11 @@ def pdf_summary(request):
                                 formatted_lines.append(f'<p>{line}</p>')
                     summary = '\n'.join(formatted_lines)
                 
-                # Save the summary to database
+                # Save the summary to database with the generated title
                 PDFSummary.objects.create(
                     user=request.user,
                     file_name=pdf_file.name,
+                    title=generated_title,
                     summary=summary
                 )
                 
@@ -201,6 +253,32 @@ def download_resume_pdf(request, resume_id):
 
 @login_required
 def resume_builder(request):
+    form_type = request.GET.get('type')
+    auto_fill = {}
+    
+    if form_type == 'auto':
+        # Get user profile data
+        userprofile = request.user.userprofile
+        user = request.user
+        
+        # Format the skills from comma-separated string to list
+        skills_list = [s.strip() for s in userprofile.skills.split(',')] if userprofile.skills else []
+        
+        # Prepare auto-fill data
+        auto_fill = {
+            'full_name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'phone': userprofile.phone_number,
+            'location': userprofile.address,
+            'summary': userprofile.bio or '',
+            'education': {
+                'degree': userprofile.highest_education,
+                'institution': userprofile.institution,
+                'graduation_year': userprofile.graduation_year
+            } if userprofile.highest_education else None,
+            'skills': [{'category': 'Skills', 'skills': skills_list}] if skills_list else []
+        }
+
     if request.method == 'POST':
         try:
             # Extract form data
@@ -355,20 +433,36 @@ Location: {location}</p>
             messages.success(request, 'Resume generated successfully!')
             return render(request, 'core/resume_builder.html', {
                 'resume_content': generated_content,
-                'resume_id': resume.id
+                'resume_id': resume.id,
+                'form_type': form_type,
+                'auto_fill': auto_fill
             })
             
         except Exception as e:
             messages.error(request, f'An error occurred while generating your resume: {str(e)}')
-            return render(request, 'core/resume_builder.html')
+            return render(request, 'core/resume_builder.html', {
+                'form_type': form_type,
+                'auto_fill': auto_fill
+            })
     
-    return render(request, 'core/resume_builder.html')
+    return render(request, 'core/resume_builder.html', {
+        'form_type': form_type,
+        'auto_fill': auto_fill
+    })
 
 @login_required
-def profile(request):
+def resumes_view_all(request):
     resumes = Resume.objects.filter(user=request.user).order_by('-created_at')
-    pdf_summaries = PDFSummary.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'core/profile.html', {
-        'resumes': resumes,
-        'pdf_summaries': pdf_summaries
+    return render(request, 'core/resumes_list.html', {'resumes': resumes})
+
+@login_required
+def pdf_summaries_view_all(request):
+    query = request.GET.get('q', '')
+    if query:
+        pdf_summaries = PDFSummary.search(request.user, query)
+    else:
+        pdf_summaries = PDFSummary.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'core/pdf_summaries_list.html', {
+        'pdf_summaries': pdf_summaries,
+        'query': query
     })

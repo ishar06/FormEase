@@ -11,5 +11,7 @@ urlpatterns = [
     path('resume-builder/', views.resume_builder, name='resume_builder'),
     path('resume/<int:resume_id>/download/', views.download_resume_pdf, name='download_resume_pdf'),
     path('profile/', views.profile, name='profile'),
+    path('resumes/', views.resumes_view_all, name='resumes_view_all'),
+    path('pdf-summaries/', views.pdf_summaries_view_all, name='pdf_summaries_view_all'),
 ]
 
