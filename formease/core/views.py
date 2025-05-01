@@ -70,7 +70,6 @@ def home(request):
 
 @login_required
 def pdf_summary(request):
-    # ... existing pdf_summary code ...
     summary = None
     if request.method == 'POST' and request.FILES.get('pdf_file'):
         try:
@@ -132,12 +131,41 @@ def pdf_summary(request):
 
             # Call Ollama for summarization
             try:
-                prompt = f"Summarize the following text in bullet points:\n{text}"
+                prompt = (
+                    "Create a well-formatted summary of the following text using HTML markup. Follow these rules:\n"
+                    "1. Use h2 tags for main sections\n"
+                    "2. Use h3 tags for subsections\n"
+                    "3. Use p tags for paragraphs\n"
+                    "4. Use ul/li tags for lists where appropriate\n"
+                    "5. Use div class='highlight' for important points\n"
+                    "6. Make it easy to read and understand\n"
+                    "7. Group related information under appropriate sections\n"
+                    "Text to summarize:\n\n"
+                    f"{text}"
+                )
                 response = ollama.chat(
                     model='llama3',
                     messages=[{"role": "user", "content": prompt}]
                 )
-                summary = response['message']['content']
+                summary = response['message']['content'].strip()
+                
+                # Clean up the formatting if needed
+                if not summary.startswith('<'):
+                    # Convert plain text to basic HTML if AI didn't return HTML
+                    formatted_lines = []
+                    for line in summary.split('\n'):
+                        line = line.strip()
+                        if line:
+                            if line.startswith('•') or line.startswith('-'):
+                                if not formatted_lines or not formatted_lines[-1].startswith('<ul>'):
+                                    formatted_lines.append('<ul>')
+                                formatted_lines.append(f'<li>{line.lstrip("•- ")}</li>')
+                            else:
+                                if formatted_lines and formatted_lines[-1].startswith('<ul>'):
+                                    formatted_lines.append('</ul>')
+                                formatted_lines.append(f'<p>{line}</p>')
+                    summary = '\n'.join(formatted_lines)
+                
                 messages.success(request, 'Summary generated successfully!')
             except Exception as e:
                 messages.error(request, 'An error occurred while generating the summary. Please try again.')
