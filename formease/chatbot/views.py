@@ -7,10 +7,43 @@ import json
 
 def get_ollama_response(message):
     try:
+        # Define available features and their descriptions
+        features = {
+            "resume": {
+                "url": "/resume-builder/",
+                "description": "Create professional resumes with AI assistance"
+            },
+            "pdf": {
+                "url": "/pdf-summary/",
+                "description": "Generate AI-powered summaries of PDF documents"
+            },
+            "resumes": {
+                "url": "/resumes/",
+                "description": "View all your created resumes"
+            },
+            "summaries": {
+                "url": "/pdf-summaries/",
+                "description": "View all your PDF summaries"
+            }
+        }
+
+        # Add feature information to the prompt
+        feature_context = """
+        Available features:
+        - Resume Builder (/resume-builder/): Create professional resumes with AI assistance
+        - PDF Summarizer (/pdf-summary/): Generate AI-powered summaries of PDF documents
+        - My Resumes (/resumes/): View all your created resumes
+        - PDF Summaries (/pdf-summaries/): View all your PDF summaries
+        """
+
         response = requests.post('http://localhost:11434/api/generate',
             json={
                 'model': 'llama3',
-                'prompt': f"You are FormEase assistant. Response to: {message}",
+                'prompt': f"""You are FormEase assistant. Here are the available features:
+                {feature_context}
+                
+                When referring to features, include their paths.
+                Response to: {message}""",
                 'stream': False
             })
         if response.status_code == 200:
