@@ -57,27 +57,57 @@ class ExtendedUserCreationForm(UserCreationForm):
     first_name = forms.CharField(
         max_length=30, 
         required=True,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.TextInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'First Name'
+        })
     )
     last_name = forms.CharField(
         max_length=30, 
         required=True,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.TextInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'Last Name'
+        })
     )
     email = forms.EmailField(
         required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control'})
+        widget=forms.EmailInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'Email'
+        })
     )
     username = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.TextInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'Username'
+        })
     )
     password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'Password'
+        })
     )
     password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'input-field',
+            'placeholder': 'Confirm Password'
+        })
     )
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email address is already in use.')
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError('This username is already taken.')
+        return username
