@@ -30,3 +30,16 @@ class Resume(models.Model):
     
     def __str__(self):
         return f"{self.full_name}'s Resume - {self.created_at.strftime('%Y-%m-%d')}"
+
+class PDFSummary(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    file_name = models.CharField(max_length=255)
+    summary = models.TextField()
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'PDF Summaries'
+    
+    def __str__(self):
+        return f"{self.file_name} - {self.created_at.strftime('%Y-%m-%d')}"

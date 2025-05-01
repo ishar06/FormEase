@@ -10,7 +10,7 @@ import os
 import pytesseract
 import numpy as np
 import json
-from .models import Resume
+from .models import Resume, PDFSummary
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
@@ -165,6 +165,13 @@ def pdf_summary(request):
                                     formatted_lines.append('</ul>')
                                 formatted_lines.append(f'<p>{line}</p>')
                     summary = '\n'.join(formatted_lines)
+                
+                # Save the summary to database
+                PDFSummary.objects.create(
+                    user=request.user,
+                    file_name=pdf_file.name,
+                    summary=summary
+                )
                 
                 messages.success(request, 'Summary generated successfully!')
             except Exception as e:
@@ -356,3 +363,12 @@ Location: {location}</p>
             return render(request, 'core/resume_builder.html')
     
     return render(request, 'core/resume_builder.html')
+
+@login_required
+def profile(request):
+    resumes = Resume.objects.filter(user=request.user).order_by('-created_at')
+    pdf_summaries = PDFSummary.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'core/profile.html', {
+        'resumes': resumes,
+        'pdf_summaries': pdf_summaries
+    })
