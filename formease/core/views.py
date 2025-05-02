@@ -32,14 +32,19 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        
+        if not username or not password:
+            messages.error(request, 'Please enter both username and password.')
+            return render(request, 'core/login.html')
+            
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
             login(request, user)
-            messages.success(request, 'Successfully logged in!')
+            messages.success(request, f'Welcome back, {user.first_name}!')
             return redirect('home')
         else:
-            messages.error(request, 'Invalid username or password.')
+            messages.error(request, 'Invalid username or password. Please try again.')
             
     return render(request, 'core/login.html')
 
@@ -51,12 +56,21 @@ def register_view(request):
         form = ExtendedUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, 'Registration successful!')
-            return redirect('home')
+            # Log the user in immediately after registration
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome {user.first_name}! Your account has been created successfully.')
+                return redirect('home')
         else:
-            for error in form.errors.values():
-                messages.error(request, error)
+            # Collect all error messages
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{error}")
+            messages.error(request, ' '.join(error_messages))
     else:
         form = ExtendedUserCreationForm()
 
@@ -76,27 +90,34 @@ def profile(request):
     # Get or create UserProfile for the current user
     userprofile, created = UserProfile.objects.get_or_create(user=request.user)
     
-    resumes = Resume.objects.filter(user=request.user).order_by('-created_at')
-    pdf_summaries = PDFSummary.objects.filter(user=request.user).order_by('-created_at')
-
     if request.method == 'POST':
-        user_form = EditProfileForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile)
+        form_type = request.POST.get('form_type')
         
-        if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            profile_form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('profile')
+        if form_type == 'additional':
+            # Handle additional information form
+            profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Additional information updated successfully!')
+                return redirect('profile')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # Handle main profile form
+            user_form = EditProfileForm(request.POST, instance=request.user)
+            profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile,
+                                        fields=['phone_number', 'address', 'gender', 'age'])
+            
+            if user_form.is_valid() and profile_form.is_valid():
+                user_form.save()
+                profile_form.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('profile')
+            else:
+                messages.error(request, 'Please correct the errors below.')
     else:
         user_form = EditProfileForm(instance=request.user)
         profile_form = UserProfileForm(instance=userprofile)
 
     return render(request, 'core/profile.html', {
-        'resumes': resumes,
-        'pdf_summaries': pdf_summaries,
         'user_form': user_form,
         'profile_form': profile_form
     })
